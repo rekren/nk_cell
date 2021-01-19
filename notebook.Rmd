@@ -1,18 +1,28 @@
 ---
 title: "NK Cell Project"
+author: "Rüçhan Ekren"
+date: "20/01/2021"
 output:
   html_document:
     df_print: paged
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+We have a pre-processed and curated *Seurat* object of NK cells from 4 healthy donors(*HD*) and 4 Multiple Myeloma patients (*MM*).
 
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
 
+
+First load up the required R packages,
 ```{r}
-plot(cars)
-
+library(Seurat);library(ggplot2);library(patchwork);
 ```
+
+Then let's read this object and see what it is consisted of.
+
+```{r echo=TRUE}
+nk <- readRDS("/home/ruchan/Desktop/work/RobjectsAndCo/NKonly.RDS")
+nk
+```
+
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 
