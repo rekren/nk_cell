@@ -100,12 +100,18 @@ repeat {
 
 table(pbmc.combined$orig.ident)        ## Each sample's cell numbers
 sum(table(pbmc.combined$orig.ident))   ## 244511 Cell
-table(pbmc.combined$source)   ##  Blood  114379  BoneMarrow 130132 
-table(pbmc.combined$condition) ## 105850 138661 
+table(pbmc.combined$source)            ##  Blood  114379  BoneMarrow 130132 
+table(pbmc.combined$condition)         ## 105850 138661 
 
 pbmc.combined[["percent.mt"]] <- Seurat::PercentageFeatureSet(pbmc.combined, pattern = "^MT-")
 
 pbmc.combined <- subset(pbmc.combined, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 25)
+
+table(pbmc.combined$orig.ident)       
+sum(table(pbmc.combined$orig.ident))  
+table(pbmc.combined$source)           
+table(pbmc.combined$condition)        
+
 
 pbmc.combined <- Seurat::NormalizeData(pbmc.combined)
 
@@ -150,6 +156,6 @@ pbmc.combined <- Seurat::FindClusters(pbmc.combined, resolution = 0.5)
 pbmc.combined <- Seurat::RunUMAP(pbmc.combined, dims = 1:10)
 
 # saveRDS(pbmc.combined,"untouched_cohort.RDS")
-# test git :-P
+
 
   
