@@ -47,6 +47,26 @@ samples<- c(
 name_of_samples <- basename(dirname(dirname(samples)))
 
 i <-1
+#### For the first sample, run those manually. Then, there will come `repeater`
+tmp <- Seurat::Read10X(data.dir =samples[i],unique.features = T,cell.column = 1,gene.column = 2);
+
+tmp_seurat <- CreateSeuratObject(counts = tmp[["Gene Expression"]], min.cells = 3, min.features = 200, project = name_of_samples[i])
+tmp_seurat <- NormalizeData(tmp_seurat)
+###### Cleaning TotalSeqB tag from the prospective ADT data
+rownames(tmp[["Antibody Capture"]])<- stringr::str_replace_all(rownames(tmp[["Antibody Capture"]]),
+                                                               setNames("", "_*TotalSeqB"));
+###### Adding ADT modality to Seurat object 
+tmp_seurat[["ADT"]] <- CreateAssayObject(tmp[["Antibody Capture"]][, colnames(x = tmp_seurat)])
+tmp_seurat <- NormalizeData(tmp_seurat, assay = "ADT", normalization.method = "CLR",
+                            project = name_of_samples[i])
+###### Embedding additional infos
+tmp_seurat$condition = ifelse(grepl(pattern="H",x=name_of_samples[i]),"HD","MM")
+tmp_seurat$source = ifelse(grepl(pattern="m",x=name_of_samples[i]),"BoneMarrow","Blood")
+rm(tmp)
+####   Only required for for 1st iteration, manually run for the first one up to here    
+pbmc.combined <- tmp_seurat
+i <- i+1
+
 repeat {
  
   # Run the inner loop for once manually then  repeat it with repeater
