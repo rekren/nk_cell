@@ -1,5 +1,5 @@
 set_libs <- function() {
-  library(Seurat);library(ggplot2);library(patchwork);library(tidyverse); library(monocle3);library(SeuratWrappers)
+  library(Seurat);library(ggplot2);library(patchwork);library(tidyverse); library(monocle3);library(SeuratDisk);library(SeuratWrappers)
 }
 set_libs()
 samples<- c(
@@ -100,12 +100,18 @@ repeat {
 
 table(pbmc.combined$orig.ident)        ## Each sample's cell numbers
 sum(table(pbmc.combined$orig.ident))   ## 244511 Cell
-table(pbmc.combined$source)            ##  Blood  114379  BoneMarrow 130132 
+table(pbmc.combined$source)            ## Blood  114379  BoneMarrow 130132 
 table(pbmc.combined$condition)         ## 105850 138661 
 
 pbmc.combined[["percent.mt"]] <- Seurat::PercentageFeatureSet(pbmc.combined, pattern = "^MT-")
 
 pbmc.combined <- subset(pbmc.combined, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 25)
+
+saveRDS(object = pbmc.combined,file = 'untouched_pbmc_combined.RDS')
+SaveH5Seurat(pbmc.combined,verbose = T,filename = 'untouched_pbmc_combined.h5seurat')
+
+# reference <- LoadH5Seurat('pbmc_multimodal.h5seurat')
+
 
 table(pbmc.combined$orig.ident)       
 sum(table(pbmc.combined$orig.ident))  
@@ -120,6 +126,7 @@ pbmc.combined <- Seurat::NormalizeData(pbmc.combined)
 # su.anchors <- Seurat::FindIntegrationAnchors(object.list=su.list,dims=1:15)
 # rm(list=setdiff(ls(), "su.anchors"))
 
+saveRDS()
 gc()
 
 # For big datasets (i.e. several hundred thousand single-cells)
@@ -154,7 +161,6 @@ pbmc.combined <- Seurat::FindClusters(pbmc.combined, resolution = 0.5)
 
 
 pbmc.combined <- Seurat::RunUMAP(pbmc.combined, dims = 1:10)
-
 # saveRDS(pbmc.combined,"untouched_cohort.RDS")
 
 
