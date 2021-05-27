@@ -112,6 +112,7 @@ SaveH5Seurat(pbmc.combined,verbose = T,filename = 'untouched_pbmc_combined.h5seu
 
 # reference <- LoadH5Seurat('pbmc_multimodal.h5seurat')
 
+# >>>>> burada kaldın dün >>>>
 
 table(pbmc.combined$orig.ident)       
 sum(table(pbmc.combined$orig.ident))  
