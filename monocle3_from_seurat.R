@@ -86,7 +86,7 @@ p5 <- dittoBarPlot(object = NK_only,group.by = "seurat_clusters",var = "source")
 #              cluster_cols = F,)
 
 
-DittoFreqPlot(object = NK_only,group.by = "condition",var = "seurat_clusters")
+dittoFreqPlot(object = NK_only,group.by = "condition",var = "seurat_clusters")
 
 
 Idents(NK_only) <- NK_only$seurat_clusters
@@ -122,3 +122,111 @@ DimPlot(NK_only)
 # NK_only <- RunPCA(NK_only, features = c(s.genes, g2m.genes))
 # DimPlot(NK_only)
 # DimPlot(NK_only,reduction = "pca")
+
+#Splitting the data into HD and MM samples 
+Idents(NK_only) <- NK_only$condition
+NK_MM <-subset(x = NK_only, idents = "MM")
+NK_HD <-subset(x = NK_only, idents = "HD")
+
+############################################################################
+Reductions(NK_HD)
+my.so <- ProjectDim(NK_HD,assay = "integrated", reduction = "umap")
+# Create an expression matrix
+expression_matrix <- my.so@assays$integrated@data
+# Get cell metadata
+cell_metadata <- my.so@meta.data
+if (all.equal(colnames(expression_matrix), rownames(cell_metadata))) {
+  print(sprintf("Cell identifiers match"))
+} else {
+  print(sprintf("Cell identifier mismatch - %i cells in expression matrix, %i cells in metadata",
+                ncol(expression_matrix), nrow(cell_metadata)))
+  print("If the counts are equal, sort differences will throw this error")
+}
+# get gene annotations
+gene_annotation <- data.frame(gene_short_name = rownames(my.so@assays$integrated), row.names = rownames(my.so@assays$integrated))
+if (all.equal(rownames(expression_matrix), rownames(gene_annotation))) {
+  print(sprintf("Gene identifiers all match"))
+} else {
+  print(sprintf("Gene identifier mismatch - %i genes in expression matrix, %i gene in gene annotation",
+                nrow(expression_matrix), nrow(gene_annotation)))
+  print("If the counts are equal, sort differences will throw this error")
+}
+# Seurat-derived CDS
+my.cds <- new_cell_data_set(expression_matrix,
+                            cell_metadata = cell_metadata,
+                            gene_metadata = gene_annotation)
+# Transfer Seurat embeddings
+# Note that these may be calculated on the Integrated object, not the counts
+#   and thus will involve fewer genes
+reducedDim(my.cds, type = "PCA") <- my.so@reductions$pca@cell.embeddings 
+my.cds@preprocess_aux$prop_var_expl <- my.so@reductions$pca@stdev
+plot_pc_variance_explained(my.cds)
+# Transfer Seurat UMAP embeddings
+my.cds@int_colData@listData$reducedDims$UMAP <- my.so@reductions$umap@cell.embeddings
+plot_cells(my.cds,label_groups_by_cluster = T,group_label_size = 5)
+# Copy cluster info from Seurat
+my.cds@clusters$UMAP_so$clusters <- my.so@meta.data$seurat_clusters
+my.cds <- cluster_cells(my.cds, reduction_method = "UMAP")
+# Fix from https://gitmemory.com/cole-trapnell-lab
+rownames(my.cds@principal_graph_aux$UMAP$dp_mst) <- NULL
+colnames(my.cds@int_colData@listData$reducedDims$UMAP) <- NULL
+my.cds <- learn_graph(my.cds, use_partition = TRUE,learn_graph_control=list("geodesic_distance_ratio"=1/2))
+my.cds <- order_cells(my.cds)
+mon_plot <- plot_cells(
+  cds = my.cds,
+  color_cells_by = "pseudotime",
+  show_trajectory_graph = T
+)
+
+
+
+
+
+Reductions(NK_MM)
+my.so <- ProjectDim(NK_MM,assay = "integrated", reduction = "umap")
+# Create an expression matrix
+expression_matrix <- my.so@assays$integrated@data
+# Get cell metadata
+cell_metadata <- my.so@meta.data
+if (all.equal(colnames(expression_matrix), rownames(cell_metadata))) {
+  print(sprintf("Cell identifiers match"))
+} else {
+  print(sprintf("Cell identifier mismatch - %i cells in expression matrix, %i cells in metadata",
+                ncol(expression_matrix), nrow(cell_metadata)))
+  print("If the counts are equal, sort differences will throw this error")
+}
+# get gene annotations
+gene_annotation <- data.frame(gene_short_name = rownames(my.so@assays$integrated), row.names = rownames(my.so@assays$integrated))
+if (all.equal(rownames(expression_matrix), rownames(gene_annotation))) {
+  print(sprintf("Gene identifiers all match"))
+} else {
+  print(sprintf("Gene identifier mismatch - %i genes in expression matrix, %i gene in gene annotation",
+                nrow(expression_matrix), nrow(gene_annotation)))
+  print("If the counts are equal, sort differences will throw this error")
+}
+# Seurat-derived CDS
+my.cds <- new_cell_data_set(expression_matrix,
+                            cell_metadata = cell_metadata,
+                            gene_metadata = gene_annotation)
+# Transfer Seurat embeddings
+# Note that these may be calculated on the Integrated object, not the counts
+#   and thus will involve fewer genes
+reducedDim(my.cds, type = "PCA") <- my.so@reductions$pca@cell.embeddings 
+my.cds@preprocess_aux$prop_var_expl <- my.so@reductions$pca@stdev
+plot_pc_variance_explained(my.cds)
+# Transfer Seurat UMAP embeddings
+my.cds@int_colData@listData$reducedDims$UMAP <- my.so@reductions$umap@cell.embeddings
+plot_cells(my.cds,label_groups_by_cluster = T,group_label_size = 5)
+# Copy cluster info from Seurat
+my.cds@clusters$UMAP_so$clusters <- my.so@meta.data$seurat_clusters
+my.cds <- cluster_cells(my.cds, reduction_method = "UMAP")
+# Fix from https://gitmemory.com/cole-trapnell-lab
+rownames(my.cds@principal_graph_aux$UMAP$dp_mst) <- NULL
+colnames(my.cds@int_colData@listData$reducedDims$UMAP) <- NULL
+my.cds <- learn_graph(my.cds, use_partition = TRUE,learn_graph_control=list("geodesic_distance_ratio"=1/2))
+my.cds <- order_cells(my.cds)
+mon_plot_2 <- plot_cells(
+  cds = my.cds,
+  color_cells_by = "pseudotime",
+  show_trajectory_graph = T
+)
